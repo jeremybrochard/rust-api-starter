@@ -3,11 +3,11 @@
 # Usage: ./scripts/sonar-scan.sh
 #
 # Required environment variables:
-#   SONAR_HOST_URL  - SonarQube server URL (e.g., https://sonar.example.com)
-#   SONAR_TOKEN     - SonarQube authentication token
-#
-# Optional environment variables:
-#   SONAR_PROJECT_KEY - Project key (default: rust-api-starter)
+#   SONAR_URL     - SonarQube server URL (e.g., https://sonar.example.com)
+#   SONAR_NAME    - Project name
+#   SONAR_KEY     - Project key
+#   SONAR_VERSION - Project version
+#   SONAR_TOKEN   - SonarQube authentication token
 
 set -e
 
@@ -20,8 +20,8 @@ NC='\033[0m' # No Color
 echo -e "${GREEN}=== SonarQube Analysis ===${NC}"
 
 # Validate required environment variables
-if [ -z "$SONAR_HOST_URL" ]; then
-    echo -e "${RED}ERROR: SONAR_HOST_URL is not set${NC}"
+if [ -z "$SONAR_URL" ]; then
+    echo -e "${RED}ERROR: SONAR_URL is not set${NC}"
     exit 1
 fi
 
@@ -30,10 +30,14 @@ if [ -z "$SONAR_TOKEN" ]; then
     exit 1
 fi
 
-PROJECT_KEY="${SONAR_PROJECT_KEY:-rust-api-starter}"
+if [ -z "$SONAR_KEY" ]; then
+    echo -e "${RED}ERROR: SONAR_KEY is not set${NC}"
+    exit 1
+fi
 
-echo -e "${YELLOW}Project: ${PROJECT_KEY}${NC}"
-echo -e "${YELLOW}Server: ${SONAR_HOST_URL}${NC}"
+echo -e "${YELLOW}Project: ${SONAR_NAME} (${SONAR_KEY})${NC}"
+echo -e "${YELLOW}Version: ${SONAR_VERSION}${NC}"
+echo -e "${YELLOW}Server: ${SONAR_URL}${NC}"
 
 # Step 1: Run Clippy and generate JSON report
 echo -e "\n${GREEN}[1/3] Running Clippy analysis...${NC}"
@@ -106,16 +110,18 @@ echo -e "\n${GREEN}[3/3] Running SonarQube scanner...${NC}"
 # Check if sonar-scanner is available
 if command -v sonar-scanner &> /dev/null; then
     sonar-scanner \
-        -Dsonar.host.url="$SONAR_HOST_URL" \
+        -Dsonar.host.url="$SONAR_URL" \
         -Dsonar.token="$SONAR_TOKEN" \
-        -Dsonar.projectKey="$PROJECT_KEY"
+        -Dsonar.projectKey="$SONAR_KEY" \
+        -Dsonar.projectName="$SONAR_NAME" \
+        -Dsonar.projectVersion="$SONAR_VERSION"
 else
     echo -e "${YELLOW}sonar-scanner not found, using curl to upload report...${NC}"
     
     # Alternative: Use SonarQube Web API directly
     curl -s -u "$SONAR_TOKEN:" \
         -F "report=@clippy-report.json" \
-        "$SONAR_HOST_URL/api/issues/import_external_issues?projectKey=$PROJECT_KEY" || {
+        "$SONAR_URL/api/issues/import_external_issues?projectKey=$SONAR_KEY" || {
         echo -e "${RED}Failed to upload report. Please install sonar-scanner.${NC}"
         echo "Download from: https://docs.sonarqube.org/latest/analyzing-source-code/scanners/sonarscanner/"
         exit 1
@@ -126,4 +132,4 @@ fi
 rm -f clippy-output.json
 
 echo -e "\n${GREEN}=== SonarQube Analysis Complete ===${NC}"
-echo -e "View results at: ${SONAR_HOST_URL}/dashboard?id=${PROJECT_KEY}"
+echo -e "View results at: ${SONAR_URL}/dashboard?id=${SONAR_KEY}"

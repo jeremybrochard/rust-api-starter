@@ -14,9 +14,11 @@ ARG RUN_SONAR=false
 ARG RUN_DTRACK=false
 
 # Environment variables for SonarQube
-ARG SONAR_HOST_URL
+ARG SONAR_URL
+ARG SONAR_NAME
+ARG SONAR_KEY
+ARG SONAR_VERSION
 ARG SONAR_TOKEN
-ARG SONAR_PROJECT_KEY=rust-api-starter
 
 # Environment variables for DependencyTrack
 ARG DTRACK_URL
@@ -90,10 +92,12 @@ RUN if [ "$RUN_DTRACK" = "true" ]; then \
 # === SonarQube Analysis ===
 RUN if [ "$RUN_SONAR" = "true" ]; then \
         echo "=== Running SonarQube Analysis ===" && \
-        if [ -n "$SONAR_HOST_URL" ] && [ -n "$SONAR_TOKEN" ]; then \
-            export SONAR_HOST_URL="$SONAR_HOST_URL" && \
+        if [ -n "$SONAR_URL" ] && [ -n "$SONAR_TOKEN" ]; then \
+            export SONAR_URL="$SONAR_URL" && \
+            export SONAR_NAME="$SONAR_NAME" && \
+            export SONAR_KEY="$SONAR_KEY" && \
+            export SONAR_VERSION="$SONAR_VERSION" && \
             export SONAR_TOKEN="$SONAR_TOKEN" && \
-            export SONAR_PROJECT_KEY="$SONAR_PROJECT_KEY" && \
             ./scripts/sonar-scan.sh; \
         else \
             echo "=== SonarQube credentials not provided, skipping upload ==="; \
