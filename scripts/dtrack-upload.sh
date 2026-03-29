@@ -3,12 +3,13 @@
 # Usage: ./scripts/dtrack-upload.sh
 #
 # Required environment variables:
-#   DTRACK_URL         - DependencyTrack API URL (e.g., https://dtrack.example.com)
-#   DTRACK_API_KEY     - DependencyTrack API key
-#   DTRACK_PROJECT_UUID - UUID of the project in DependencyTrack
+#   DTRACK_URL            - DependencyTrack API URL (e.g., https://dtrack.example.com)
+#   DTRACK_API_KEY        - DependencyTrack API key
+#   DTRACK_PROJECT_NAME   - Name of the project in DependencyTrack
 #
 # Optional:
-#   SBOM_FILE - Path to SBOM file (default: sbom.json)
+#   DTRACK_PROJECT_VERSION - Project version (default: latest)
+#   SBOM_FILE              - Path to SBOM file (default: sbom.json)
 
 set -e
 
@@ -31,11 +32,12 @@ if [ -z "$DTRACK_API_KEY" ]; then
     exit 1
 fi
 
-if [ -z "$DTRACK_PROJECT_UUID" ]; then
-    echo -e "${RED}ERROR: DTRACK_PROJECT_UUID is not set${NC}"
+if [ -z "$DTRACK_PROJECT_NAME" ]; then
+    echo -e "${RED}ERROR: DTRACK_PROJECT_NAME is not set${NC}"
     exit 1
 fi
 
+DTRACK_PROJECT_VERSION="${DTRACK_PROJECT_VERSION:-latest}"
 SBOM_FILE="${SBOM_FILE:-sbom.json}"
 
 # Check if SBOM file exists
@@ -46,7 +48,8 @@ if [ ! -f "$SBOM_FILE" ]; then
 fi
 
 echo -e "${YELLOW}Server: ${DTRACK_URL}${NC}"
-echo -e "${YELLOW}Project UUID: ${DTRACK_PROJECT_UUID}${NC}"
+echo -e "${YELLOW}Project: ${DTRACK_PROJECT_NAME}${NC}"
+echo -e "${YELLOW}Version: ${DTRACK_PROJECT_VERSION}${NC}"
 echo -e "${YELLOW}SBOM file: ${SBOM_FILE}${NC}"
 
 # Base64 encode the SBOM
@@ -61,7 +64,9 @@ RESPONSE=$(curl -s -w "\n%{http_code}" -X PUT \
     -H "Content-Type: application/json" \
     -H "X-Api-Key: ${DTRACK_API_KEY}" \
     -d "{
-        \"project\": \"${DTRACK_PROJECT_UUID}\",
+        \"projectName\": \"${DTRACK_PROJECT_NAME}\",
+        \"projectVersion\": \"${DTRACK_PROJECT_VERSION}\",
+        \"autoCreate\": true,
         \"bom\": \"${SBOM_BASE64}\"
     }")
 
@@ -70,7 +75,7 @@ BODY=$(echo "$RESPONSE" | sed '$d')
 
 if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 201 ]; then
     echo -e "\n${GREEN}=== Upload Successful ===${NC}"
-    echo -e "View results at: ${DTRACK_URL}/projects/${DTRACK_PROJECT_UUID}"
+    echo -e "Project: ${DTRACK_PROJECT_NAME} (${DTRACK_PROJECT_VERSION})"
     
     # Extract token if present
     TOKEN=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))" 2>/dev/null || echo "")

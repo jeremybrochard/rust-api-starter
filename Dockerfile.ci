@@ -21,7 +21,14 @@ ARG SONAR_PROJECT_KEY=rust-api-starter
 # Environment variables for DependencyTrack
 ARG DTRACK_URL
 ARG DTRACK_API_KEY
-ARG DTRACK_PROJECT_UUID
+ARG DTRACK_PROJECT_NAME
+ARG DTRACK_PROJECT_VERSION
+
+# Environment variables for DependencyTrack badges (GitLab)
+ARG DTRACK_BADGE_API_KEY
+ARG GITLAB_URL
+ARG GITLAB_PROJECT_ID
+ARG GITLAB_TOKEN
 
 # Install build and analysis dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -68,9 +75,13 @@ RUN if [ "$RUN_DTRACK" = "true" ]; then \
         cargo install cargo-cyclonedx && \
         echo "=== Generating SBOM ===" && \
         cargo cyclonedx --format json --output-path sbom.json && \
-        if [ -n "$DTRACK_URL" ] && [ -n "$DTRACK_API_KEY" ] && [ -n "$DTRACK_PROJECT_UUID" ]; then \
+        if [ -n "$DTRACK_URL" ] && [ -n "$DTRACK_API_KEY" ] && [ -n "$DTRACK_PROJECT_NAME" ]; then \
             echo "=== Uploading SBOM to DependencyTrack ===" && \
-            ./scripts/dtrack-upload.sh; \
+            ./scripts/dtrack-upload.sh && \
+            if [ -n "$DTRACK_BADGE_API_KEY" ] && [ -n "$GITLAB_URL" ] && [ -n "$GITLAB_PROJECT_ID" ] && [ -n "$GITLAB_TOKEN" ]; then \
+                echo "=== Updating GitLab badges ===" && \
+                ./scripts/dtrack-badges.sh; \
+            fi; \
         else \
             echo "=== SBOM generated but DependencyTrack credentials not provided ==="; \
         fi \
