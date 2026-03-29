@@ -136,13 +136,23 @@ Run code quality analysis and upload results to SonarQube:
 
 ```bash
 # Set environment variables
-export SONAR_HOST_URL="https://sonar.example.com"
+export SONAR_URL="https://sonar.example.com"
 export SONAR_TOKEN="your-token"
-export SONAR_PROJECT_KEY="rust-api-starter"  # optional
+export SONAR_KEY="rust-api-starter"
+export SONAR_NAME="Rust API Starter"
+export SONAR_VERSION="1.0.0"
 
 # Run analysis
 ./scripts/sonar-scan.sh
 ```
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SONAR_URL` | Yes | SonarQube server URL |
+| `SONAR_TOKEN` | Yes | SonarQube authentication token |
+| `SONAR_KEY` | Yes | Project key |
+| `SONAR_NAME` | No | Project name |
+| `SONAR_VERSION` | No | Project version |
 
 ### DependencyTrack (SBOM)
 
@@ -155,9 +165,47 @@ Generate and upload Software Bill of Materials:
 # Upload to DependencyTrack
 export DTRACK_URL="https://dtrack.example.com"
 export DTRACK_API_KEY="your-api-key"
-export DTRACK_PROJECT_UUID="project-uuid"
+export DTRACK_PROJECT_NAME="rust-api-starter"
+export DTRACK_PROJECT_VERSION="1.0.0"  # optional, default: latest
+export SBOM_FILE="sbom.json"            # optional, default: sbom.json
 ./scripts/dtrack-upload.sh
 ```
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DTRACK_URL` | Yes | DependencyTrack API URL |
+| `DTRACK_API_KEY` | Yes | DependencyTrack API key |
+| `DTRACK_PROJECT_NAME` | Yes | Project name in DependencyTrack |
+| `DTRACK_PROJECT_VERSION` | No | Project version (default: latest) |
+| `SBOM_FILE` | No | Path to SBOM file (default: sbom.json) |
+
+### DependencyTrack Badges (GitLab)
+
+Update GitLab project badges with DependencyTrack vulnerability status:
+
+```bash
+# Set environment variables
+export DTRACK_URL="https://dtrack.example.com"
+export DTRACK_BADGE_API_KEY="your-badge-api-key"
+export DTRACK_PROJECT_NAME="rust-api-starter"
+export DTRACK_PROJECT_VERSION="1.0.0"  # optional, default: latest
+export GITLAB_URL="https://gitlab.example.com"
+export GITLAB_PROJECT_ID="123"
+export GITLAB_TOKEN="your-gitlab-token"
+
+# Update badges
+./scripts/dtrack-badges.sh
+```
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DTRACK_URL` | Yes | DependencyTrack API URL |
+| `DTRACK_BADGE_API_KEY` | Yes | DependencyTrack Badge API key |
+| `DTRACK_PROJECT_NAME` | Yes | Project name in DependencyTrack |
+| `DTRACK_PROJECT_VERSION` | No | Project version (default: latest) |
+| `GITLAB_URL` | Yes | GitLab instance URL |
+| `GITLAB_PROJECT_ID` | Yes | GitLab project ID |
+| `GITLAB_TOKEN` | Yes | GitLab API token with api scope |
 
 ### CI/CD Docker Build
 
@@ -168,11 +216,14 @@ Use `Dockerfile.ci` for builds with security analysis:
 docker build -f Dockerfile.ci -t rust-api-starter:ci \
   --build-arg RUN_SONAR=true \
   --build-arg RUN_DTRACK=true \
-  --build-arg SONAR_HOST_URL="https://sonar.example.com" \
+  --build-arg SONAR_URL="https://sonar.example.com" \
   --build-arg SONAR_TOKEN="$SONAR_TOKEN" \
+  --build-arg SONAR_KEY="rust-api-starter" \
+  --build-arg SONAR_NAME="Rust API Starter" \
+  --build-arg SONAR_VERSION="1.0.0" \
   --build-arg DTRACK_URL="https://dtrack.example.com" \
   --build-arg DTRACK_API_KEY="$DTRACK_API_KEY" \
-  --build-arg DTRACK_PROJECT_UUID="$DTRACK_PROJECT_UUID" \
+  --build-arg DTRACK_PROJECT_NAME="rust-api-starter" \
   .
 ```
 
@@ -180,11 +231,14 @@ docker build -f Dockerfile.ci -t rust-api-starter:ci \
 |----------|-------------|
 | `RUN_SONAR` | Enable SonarQube analysis (true/false) |
 | `RUN_DTRACK` | Enable DependencyTrack SBOM (true/false) |
-| `SONAR_HOST_URL` | SonarQube server URL |
+| `SONAR_URL` | SonarQube server URL |
 | `SONAR_TOKEN` | SonarQube authentication token |
+| `SONAR_KEY` | SonarQube project key |
+| `SONAR_NAME` | SonarQube project name |
+| `SONAR_VERSION` | Project version |
 | `DTRACK_URL` | DependencyTrack API URL |
 | `DTRACK_API_KEY` | DependencyTrack API key |
-| `DTRACK_PROJECT_UUID` | DependencyTrack project UUID |
+| `DTRACK_PROJECT_NAME` | DependencyTrack project name |
 
 ## License
 
