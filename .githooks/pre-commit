@@ -13,14 +13,17 @@ if [ -z "$STAGED_FILES" ]; then
     exit 0
 fi
 
-# Check formatting
-echo "Checking formatting with cargo fmt..."
-if ! cargo fmt --check; then
-    echo ""
-    echo "ERROR: Code is not formatted correctly."
-    echo "Please run 'cargo fmt' to fix formatting issues."
-    exit 1
-fi
+# Auto-fix formatting
+echo "Formatting code with cargo fmt..."
+cargo fmt
+
+# Re-stage formatted files
+echo "Re-staging formatted files..."
+for file in $STAGED_FILES; do
+    if [ -f "$file" ]; then
+        git add "$file"
+    fi
+done
 
 # Run clippy
 echo "Running clippy..."
