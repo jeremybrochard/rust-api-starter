@@ -10,6 +10,8 @@ A modular and scalable Rust API starter built with Axum, designed as a foundatio
 - **Error handling** - Centralized error types with proper HTTP responses
 - **Docker ready** - Multi-stage build with tests
 - **Git hooks** - Pre-commit formatting/linting + conventional commits validation
+- **SonarQube** - Code quality analysis integration
+- **DependencyTrack** - SBOM generation and vulnerability tracking
 
 ## Prerequisites
 
@@ -125,6 +127,64 @@ async fn my_handler() -> AppResult<Json<MyResponse>> {
     Err(AppError::NotFound("Resource not found".to_string()))
 }
 ```
+
+## Security & Code Quality
+
+### SonarQube Analysis
+
+Run code quality analysis and upload results to SonarQube:
+
+```bash
+# Set environment variables
+export SONAR_HOST_URL="https://sonar.example.com"
+export SONAR_TOKEN="your-token"
+export SONAR_PROJECT_KEY="rust-api-starter"  # optional
+
+# Run analysis
+./scripts/sonar-scan.sh
+```
+
+### DependencyTrack (SBOM)
+
+Generate and upload Software Bill of Materials:
+
+```bash
+# Generate SBOM (CycloneDX format)
+./scripts/sbom-generate.sh
+
+# Upload to DependencyTrack
+export DTRACK_URL="https://dtrack.example.com"
+export DTRACK_API_KEY="your-api-key"
+export DTRACK_PROJECT_UUID="project-uuid"
+./scripts/dtrack-upload.sh
+```
+
+### CI/CD Docker Build
+
+Use `Dockerfile.ci` for builds with security analysis:
+
+```bash
+# Build with all analyses
+docker build -f Dockerfile.ci -t rust-api-starter:ci \
+  --build-arg RUN_SONAR=true \
+  --build-arg RUN_DTRACK=true \
+  --build-arg SONAR_HOST_URL="https://sonar.example.com" \
+  --build-arg SONAR_TOKEN="$SONAR_TOKEN" \
+  --build-arg DTRACK_URL="https://dtrack.example.com" \
+  --build-arg DTRACK_API_KEY="$DTRACK_API_KEY" \
+  --build-arg DTRACK_PROJECT_UUID="$DTRACK_PROJECT_UUID" \
+  .
+```
+
+| Variable | Description |
+|----------|-------------|
+| `RUN_SONAR` | Enable SonarQube analysis (true/false) |
+| `RUN_DTRACK` | Enable DependencyTrack SBOM (true/false) |
+| `SONAR_HOST_URL` | SonarQube server URL |
+| `SONAR_TOKEN` | SonarQube authentication token |
+| `DTRACK_URL` | DependencyTrack API URL |
+| `DTRACK_API_KEY` | DependencyTrack API key |
+| `DTRACK_PROJECT_UUID` | DependencyTrack project UUID |
 
 ## License
 
